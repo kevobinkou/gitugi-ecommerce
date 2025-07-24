@@ -109,7 +109,7 @@ session_start();
 <body>
 
 <header>
-    <h1>Welcome to Gitugi E-commerce</h1>
+    <h1>🚀 Gitugi E-commerce - Live Deployment Test</h1>
     <a href="cart.php" class="cart-link">🛒 View Cart</a>
 </header>
 
