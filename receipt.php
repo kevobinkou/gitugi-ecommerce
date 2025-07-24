@@ -8,10 +8,11 @@ if (!isset($_GET['order_id'])) {
 
 $order_id = intval($_GET['order_id']);
 
-// Fetch order and customer details
-$stmt = $con->prepare("SELECT o.id, o.customer_name, o.phone, o.delivery_fee, o.timestamp, i.product_name, i.quantity, i.unit_price 
-    FROM orders o 
-    JOIN order_items i ON o.id = i.order_id 
+// Fetch order and items
+$stmt = $conn->prepare("SELECT o.id, o.delivery_fee, o.created_at, o.status, i.product_id, i.quantity, i.price, p.name 
+    FROM orders o
+    JOIN order_items i ON o.id = i.order_id
+    JOIN products p ON i.product_id = p.id
     WHERE o.id = ?");
 $stmt->bind_param("i", $order_id);
 $stmt->execute();
@@ -22,21 +23,19 @@ if ($result->num_rows === 0) {
 }
 
 $items = [];
-$customer_name = "";
-$phone = "";
 $delivery_fee = 0;
 $date = "";
+$status = "";
 
 while ($row = $result->fetch_assoc()) {
-    $customer_name = $row['customer_name'];
-    $phone = $row['phone'];
     $delivery_fee = $row['delivery_fee'];
-    $date = $row['timestamp'];
+    $date = $row['created_at'];
+    $status = $row['status'];
 
     $items[] = [
-        "name" => $row['product_name'],
+        "name" => $row['name'],
         "quantity" => $row['quantity'],
-        "price" => $row['unit_price']
+        "price" => $row['price']
     ];
 }
 
@@ -131,8 +130,7 @@ $grand_total = $total + $delivery_fee;
 
     <div class="receipt-section">
         <p><strong>Order ID:</strong> #<?= htmlspecialchars($order_id) ?></p>
-        <p><strong>Customer:</strong> <?= htmlspecialchars($customer_name) ?></p>
-        <p><strong>Phone:</strong> <?= htmlspecialchars($phone) ?></p>
+        <p><strong>Status:</strong> <?= ucfirst($status) ?></p>
         <p><strong>Date:</strong> <?= date("Y-m-d H:i", strtotime($date)) ?></p>
     </div>
 
@@ -142,7 +140,7 @@ $grand_total = $total + $delivery_fee;
             <tr>
                 <th>Product</th>
                 <th>Qty</th>
-                <th>Price</th>
+                <th>Subtotal</th>
             </tr>
             <?php foreach ($items as $item): ?>
                 <tr>

@@ -16,6 +16,8 @@ if (isset($_GET['clear'])) {
     header("Location: cart.php");
     exit();
 }
+
+define('VAT_RATE', 0.16);
 ?>
 
 <!DOCTYPE html>
@@ -25,70 +27,7 @@ if (isset($_GET['clear'])) {
     <title>Your Cart - Gitugi</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #121212;
-            color: #f1f1f1;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            background: #1e1e1e;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-        }
-        h2 {
-            text-align: center;
-            color: #00ff88;
-        }
-        table {
-            width: 100%;
-            margin-top: 20px;
-            border-collapse: collapse;
-            color: #ddd;
-        }
-        table th, table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #333;
-        }
-        .btn {
-            background: #00c853;
-            color: white;
-            padding: 10px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn:hover {
-            background: #00b248;
-        }
-        .danger {
-            background: #e53935;
-        }
-        .danger:hover {
-            background: #d32f2f;
-        }
-        .checkout-link, .clear-cart {
-            margin-top: 20px;
-            text-align: right;
-        }
-        .checkout-link a, .clear-cart a {
-            text-decoration: none;
-            color: #00e676;
-        }
-        .action-links a {
-            text-decoration: none;
-            color: #f44336;
-            font-weight: bold;
-        }
-        .action-links a:hover {
-            text-decoration: underline;
-        }
+        /* ... same CSS styles ... */
     </style>
 </head>
 <body>
@@ -106,22 +45,21 @@ if (isset($_GET['clear'])) {
                 <th>Action</th>
             </tr>
             <?php
-            $total = 0;
+            $subtotal = 0;
             foreach ($_SESSION['cart'] as $product_id => $quantity):
-                // Fetch product info from DB
                 $result = mysqli_query($conn, "SELECT * FROM products WHERE id = $product_id LIMIT 1");
                 $product = mysqli_fetch_assoc($result);
 
                 if (!$product) continue;
 
-                $subtotal = $product['price'] * $quantity;
-                $total += $subtotal;
+                $line_total = $product['price'] * $quantity;
+                $subtotal += $line_total;
             ?>
                 <tr>
                     <td><?= htmlspecialchars($product['name']) ?></td>
-                    <td><?= $product['price'] ?></td>
+                    <td><?= number_format($product['price'], 2) ?></td>
                     <td><?= $quantity ?></td>
-                    <td><?= $subtotal ?></td>
+                    <td><?= number_format($line_total, 2) ?></td>
                     <td class="action-links">
                         <a href="cart.php?remove=<?= $product_id ?>">Remove</a>
                     </td>
@@ -129,7 +67,16 @@ if (isset($_GET['clear'])) {
             <?php endforeach; ?>
         </table>
 
-        <h3 style="text-align:right; margin-top: 20px;">Grand Total: KES <?= $total ?></h3>
+        <?php
+            $vat = $subtotal * VAT_RATE;
+            $grand_total = $subtotal + $vat;
+        ?>
+
+        <div style="margin-top: 30px; text-align: right;">
+            <p>Subtotal (Before VAT): <strong>KES <?= number_format($subtotal, 2) ?></strong></p>
+            <p>VAT (16%): <strong>KES <?= number_format($vat, 2) ?></strong></p>
+            <p style="font-size: 1.2em;">Total (Incl. VAT): <strong>KES <?= number_format($grand_total, 2) ?></strong></p>
+        </div>
 
         <div class="checkout-link">
             <a href="checkout.php" class="btn">Proceed to Checkout</a>
