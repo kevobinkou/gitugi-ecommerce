@@ -1,5 +1,8 @@
 {
   "deploy": {
     "dir": "."
+  },
+  "applications": {
+    "default": "app_15980779-a598-4c7c-8a7f-411c6226b6be"
   }
 }
